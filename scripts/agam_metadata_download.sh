@@ -7,13 +7,15 @@ for v in "${releases[@]}"; do
     echo "Downloading agam release $v"
     mkdir -p data/vo_agam_release/v$v/
     # download metadata
-    gcloud storage cp -r gs://vo_agam_release_master_us_central1/v$v/metadata data/vo_agam_release/v$v/
+    #gcloud storage cp -r gs://vo_agam_release_master_us_central1/v$v/metadata data/vo_agam_release/v$v/
     # merge cohort metadata files
     awk 'NR == 1 || FNR > 1' data/vo_agam_release/v$v/metadata/general/*/samples.meta.csv > data/vo_agam_release/v$v/metadata/all_samples_metadata.csv
     # merge species metadata files
     awk 'NR == 1 || FNR > 1' data/vo_agam_release/v$v/metadata/species_calls_aim_20220528/*/samples.species_aim.csv > data/vo_agam_release/v$v/metadata/all_samples_species_calls.csv
-    # merge the two files
-    python scripts/merge_sample_metadata.py data/vo_agam_release/v$v/metadata/all_samples_species_calls.csv data/vo_agam_release/v$v/metadata/all_samples_metadata.csv data/vo_agam_release/v$v/metadata/all_samples_merged.csv
+    # merge wgs sequence accession files
+    awk 'NR == 1 || FNR > 1' data/vo_agam_release/v$v/metadata/general/*/wgs_snp_data.csv > data/vo_agam_release/v$v/metadata/all_samples_wgs_snp_data.csv
+    # merge the three files
+    python scripts/merge_sample_metadata.py data/vo_agam_release/v$v/metadata/all_samples_species_calls.csv data/vo_agam_release/v$v/metadata/all_samples_metadata.csv data/vo_agam_release/v$v/metadata/all_samples_wgs_snp_data.csv data/vo_agam_release/v$v/metadata/all_samples_merged.csv
 done
 # combine all releases into one file
 awk 'NR == 1 || FNR > 1' data/vo_agam_release/v*/metadata/all_samples_merged.csv > data/vo_agam_release/all_samples_metadata_merged.csv
