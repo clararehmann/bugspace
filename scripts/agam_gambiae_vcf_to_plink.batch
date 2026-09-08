@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#Submit this script with: sbatch thefilename
+#For more details about each parameter, please check SLURM sbatch documentation https://slurm.schedmd.com/sbatch.html
+
+#SBATCH --time=24:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=50G   # memory per node
+#SBATCH -J "gambrand"   # job name
+#SBATCH -o "logs/gambrand-%j.out"   # job output file
+#SBATCH -e "logs/gambrand-%j.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+# one argument: path to VCF file
+VCF_FILE=$1
+VCF_NAME=$(basename ${VCF_FILE%.*})
+
+mkdir -p /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/plink
+
+/hps/nobackup/jlees/rehmann/plink --vcf $VCF_FILE \
+    --keep-allele-order \
+    --make-bed \
+    --out /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/plink/$VCF_NAME

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#Submit this script with: sbatch thefilename
+#For more details about each parameter, please check SLURM sbatch documentation https://slurm.schedmd.com/sbatch.html
+
+#SBATCH --time=24:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=20G   # memory per node
+#SBATCH -J "gambmerge"   # job name
+#SBATCH -o "logs/gambmerge-%j.out"   # job output file
+#SBATCH -e "logs/gambmerge-%j.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+# merge VCFs
+pixi exec -c bioconda bcftools merge --output-type z \
+    --output /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged.vcf.gz \
+    /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/*.vcf.gz
+
+# index the merged VCF
+pixi exec -c bioconda bcftools index --tbi /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged.vcf.gz
+
+# filter to quality sites
+pixi exec -c bioconda bcftools view -T data/vo_agam_release/site_filters/sitefilters.txt \
+    /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged.vcf.gz \
+    -Oz -o /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered.vcf.gz
+
+# index the filtered VCF
+pixi exec -c bioconda bcftools index --tbi /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered.vcf.gz

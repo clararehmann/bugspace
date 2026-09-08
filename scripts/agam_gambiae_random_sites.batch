@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#Submit this script with: sbatch thefilename
+#For more details about each parameter, please check SLURM sbatch documentation https://slurm.schedmd.com/sbatch.html
+
+#SBATCH --time=24:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=50G   # memory per node
+#SBATCH -J "gambrand"   # job name
+#SBATCH -o "logs/gambrand-%j.out"   # job output file
+#SBATCH -e "logs/gambrand-%j.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+# one argument: the number of random sites to select
+NUM_SITES=$1
+VCF_FILE="/hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered.vcf.gz"
+
+# pull header
+pixi exec -c bioconda bcftools view --header-only $VCF_FILE > /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_random_$NUM_SITES.vcf
+# append random sites
+pixi exec -c bioconda bcftools view --no-header $VCF_FILE | awk '{printf("%f\t%s\n",rand(),$0);}' | sort -t $'\t'  -T . -k1,1g | head -n $NUM_SITES | cut -f 2- >> /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_random_$NUM_SITES.vcf
+# bgzip the random sites VCF
+pixi exec -c bioconda bcftools view -Oz /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_random_$NUM_SITES.vcf > /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_random_$NUM_SITES.vcf.gz
+rm /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_random_$NUM_SITES.vcf
+# index the random sites VCF
+pixi exec -c bioconda bcftools index --tbi /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_random_$NUM_SITES.vcf.gz

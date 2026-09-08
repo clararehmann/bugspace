@@ -7,10 +7,10 @@
 #SBATCH --ntasks=1   # number of tasks
 #SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
 #SBATCH --nodes=1   # number of nodes
-#SBATCH --mem=1G   # memory per node
+#SBATCH --mem=5G   # memory per node
 #SBATCH -J "gambdownload"   # job name
-#SBATCH -o "logs/gambdownload.out"   # job output file
-#SBATCH -e "logs/gambdownload.err"   # job error file
+#SBATCH -o "logs/gambdownload-%j.out"   # job output file
+#SBATCH -e "logs/gambdownload-%j.err"   # job error file
 #SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
@@ -23,6 +23,7 @@ URL="https://vo_agam_output.cog.sanger.ac.uk/"
 DATAPATH="/hps/nobackup/jlees/rehmann"
 BUGPATH="/nfs/research/jlees/rehmann/bugspace"
 
+rm -r $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/
 mkdir -p $DATAPATH/vo_agam_release/vcfs/gambiae/
 # gambiae
 
