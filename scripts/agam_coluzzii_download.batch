@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#Submit this script with: sbatch thefilename
+#For more details about each parameter, please check SLURM sbatch documentation https://slurm.schedmd.com/sbatch.html
+
+#SBATCH --time=24:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=1G   # memory per node
+#SBATCH -J "coludownload"   # job name
+#SBATCH -o "logs/coludownload.out"   # job output file
+#SBATCH -e "logs/coludownload.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+# one argument: the year to download
+YEAR=$1
+
+URL="https://vo_agam_output.cog.sanger.ac.uk/"
+DATAPATH="/hps/nobackup/jlees/rehmann"
+BUGPATH="/nfs/research/jlees/rehmann/bugspace"
+
+mkdir -p $DATAPATH/vo_agam_release/vcfs/coluzzii/
+# coluzzii
+
+# TEST VERSION -- download only one sample for 2015
+echo "Downloading coluzzii vcfs for year $YEAR"
+mkdir -p $DATAPATH/vo_agam_release/vcfs/coluzzii/$YEAR/
+grep $YEAR $BUGPATH/data/vo_agam_release/all_samples_metadata_merged.csv | grep "coluzzii" | cut -d, -f 1,19 | while IFS=, read sample path; do
+    wget -O $DATAPATH/vo_agam_release/vcfs/coluzzii/$YEAR/$sample.vcf.gz $path
+    wget -O $DATAPATH/vo_agam_release/vcfs/coluzzii/$YEAR/$sample.vcf.gz.tbi $path.tbi
+    echo $sample 
+    echo $path
+done
