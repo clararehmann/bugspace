@@ -1,25 +1,12 @@
 import sys
 import pandas as pd
 
-def read_species_calls(species_calls_path):
+def merge_data(species_calls_df, sample_metadata_df, sample_accession_df):
     """
-    Read species calls file and return a pandas DataFrame.
-    """
-    species_calls_df=pd.read_csv(species_calls_path)
-    return species_calls_df
-
-def read_sample_metadata(sample_metadata_path):
-    """
-    Read sample metadata file and return a pandas DataFrame.
-    """
-    sample_metadata_df=pd.read_csv(sample_metadata_path)
-    return sample_metadata_df
-
-def merge_data(species_calls_df, sample_metadata_df):
-    """
-    Merge species calls DataFrame with sample metadata DataFrame on 'sample_id'.
+    Merge species calls DataFrame with sample metadata DataFrame and accession DataFrame on 'sample_id'.
     """
     merged_df=pd.merge(species_calls_df, sample_metadata_df, on='sample_id', how='left')
+    merged_df=pd.merge(merged_df, sample_accession_df, on='sample_id', how='left')
     return merged_df
 
 def main():
@@ -32,11 +19,13 @@ def main():
     """
     species_calls_path=args[0]
     sample_metadata_path=args[1]
-    output_path=args[2] if len(args) > 2 else 'merged_sample_data.csv'
+    sample_accession_path=args[2]
+    output_path=args[3] if len(args) > 3 else 'merged_sample_data.csv'
 
-    species_calls_df=read_species_calls(species_calls_path)
-    sample_metadata_df=read_sample_metadata(sample_metadata_path)
-    merged_df=merge_data(species_calls_df, sample_metadata_df)
+    species_calls_df=pd.read_csv(species_calls_path)
+    sample_metadata_df=pd.read_csv(sample_metadata_path)
+    sample_accession_df=pd.read_csv(sample_accession_path)
+    merged_df=merge_data(species_calls_df, sample_metadata_df, sample_accession_df)
     merged_df.to_csv(output_path, index=False)
 
 if __name__=="__main__":
