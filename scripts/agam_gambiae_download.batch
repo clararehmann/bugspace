@@ -23,7 +23,7 @@ URL="https://vo_agam_output.cog.sanger.ac.uk/"
 DATAPATH="/hps/nobackup/jlees/rehmann"
 BUGPATH="/nfs/research/jlees/rehmann/bugspace"
 
-rm -r $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/
+#rm -r $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/
 mkdir -p $DATAPATH/vo_agam_release/vcfs/gambiae/
 # gambiae
 
@@ -31,8 +31,14 @@ mkdir -p $DATAPATH/vo_agam_release/vcfs/gambiae/
 echo "Downloading gambiae vcfs for year $YEAR"
 mkdir -p $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/
 grep $YEAR $BUGPATH/data/vo_agam_release/all_samples_metadata_merged.csv | grep "gambiae" | cut -d, -f 1,19 | while IFS=, read sample path; do
-    wget -O $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/$sample.vcf.gz $path
-    wget -O $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/$sample.vcf.gz.tbi $path.tbi
-    echo $sample 
-    echo $path
+    if [ ! -f $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/$sample.vcf.gz ]; then
+        echo "Downloading $sample for year $YEAR"
+        wget -O $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/$sample.vcf.gz $path
+        wget -O $DATAPATH/vo_agam_release/vcfs/gambiae/$YEAR/$sample.vcf.gz.tbi $path.tbi
+        echo $sample 
+        echo $path
+    else
+        echo "$sample already downloaded for year $YEAR"
+        continue
+    fi
 done
