@@ -18,7 +18,7 @@
 
 # one argument: the number of random sites to select
 NUM_SITES=$1
-VCF_FILE="/hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered.vcf.gz"
+VCF_FILE="/hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_reordered.vcf.gz"
 
 # pull header
 pixi exec -c bioconda bcftools view --header-only $VCF_FILE > /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_random_$NUM_SITES.vcf

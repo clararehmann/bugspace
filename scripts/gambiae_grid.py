@@ -53,5 +53,9 @@ hull = ConvexHull(df[['longitude', 'latitude']].values)
 hull = Polygon(df[['longitude', 'latitude']].values[hull.vertices])
 hull = scale(hull, xfact=1.1, yfact=1.1, origin='centroid') # scale the hull by 10% to include points just outside the convex hull
 coords = np.array([coord for coord in coords if hull.contains(Point(coord[1], coord[0]))])
-
+# save coordinates of grid
 np.savetxt('data/vo_agam_release/gambiae_grid_coords.csv', coords, delimiter=',', comments='', fmt='%1.6f')
+# save coordinates of hull
+lon, lat = hull.exterior.coords.xy
+hull = np.asarray(tuple(zip(lat, lon)))
+np.savetxt('data/vo_agam_release/gambiae_hull_coords.csv', hull, delimiter=',', comments='', fmt='%1.6f')

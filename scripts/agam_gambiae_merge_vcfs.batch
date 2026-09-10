@@ -19,7 +19,7 @@
 # merge VCFs
 pixi exec -c bioconda bcftools merge --output-type z \
     --output /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged.vcf.gz \
-    /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/*.vcf.gz
+    /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/*/*.vcf.gz
 
 # index the merged VCF
 pixi exec -c bioconda bcftools index --tbi /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged.vcf.gz
@@ -31,3 +31,11 @@ pixi exec -c bioconda bcftools view -T data/vo_agam_release/site_filters/sitefil
 
 # index the filtered VCF
 pixi exec -c bioconda bcftools index --tbi /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered.vcf.gz
+
+# filter and reorder to samples in metadata file
+pixi exec -c bioconda bcftools view -S data/vo_agam_release/gambiae_samples.txt \
+    /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered.vcf.gz \
+    -Oz -o /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_reordered.vcf.gz
+
+# index the filtered and reordered VCF
+pixi exec -c bioconda bcftools index --tbi /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_filtered_reordered.vcf.gz
