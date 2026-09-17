@@ -16,3 +16,12 @@ shapely = ">=2.1.2,<3"
 h3-py = ">=4.5.0,<5"
 matplotlib = ">=3.11.1,<4"
 pyproj = ">=3.8.0,<4"
+scikit-allel = ">=1.3.13,<2"
+tabix = ">=1.11,<2"
+numpy = "1.*"
+zarr = "<3.0"
+networkx = "3.4.2.*"
+
+[pypi-dependencies]
+malariagen-data = ">=14.0.0, <15"
+frame = { git = "https://github.com/NovembreLab/frame.git" }

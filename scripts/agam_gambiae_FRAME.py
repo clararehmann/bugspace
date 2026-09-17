@@ -7,6 +7,7 @@ from frame.cross_validation import run_cv
 from frame.digraphstats import Digraphstats
 from frame.utils import prepare_graph_inputs
 from matplotlib import pyplot as plt
+import cartopy.crs as ccrs
 
 parser=argparse.ArgumentParser(description="run FRAME (optionally on a window) of a VCF file")
 parser.add_argument("--vcf", type=str, required=True)
