@@ -37,6 +37,9 @@ gt = gt.T
 
 # read spatial files
 coordinates = np.genfromtxt(args.coordinates, delimiter=',')
+central_latitude = np.mean(coordinates[:,0])
+central_longitude = np.mean(coordinates[:,1])
+projection = ccrs.EquidistantConic(central_longitude = central_longitude, central_latitude = central_latitude)
 outer = np.genfromtxt(args.edges, delimiter=',')
 outer, edges, grid, _ = prepare_graph_inputs(coord=coordinates,
                                             ggrid=args.grid, 
@@ -65,7 +68,7 @@ plt.figure(figsize=(8, 6))
 plt.plot(np.log10(lamb_m_grid), cv_errs, 'bo')   
 plt.xlabel(r"$\mathrm{log}_{10}(\mathrm{\lambda_m})$")
 plt.ylabel('CV Error')
-plt.savefig(f"{args.output}_lambda_cv.png")
+plt.savefig(f'{args.output}_lambda_cv.png')
 
 # use lambda to fit spatial digraph
 lamb_m_opt=lamb_m_grid[np.argmin(cv_errs)]
@@ -100,4 +103,4 @@ v = Vis(axs[0,0], sp_digraph, projection=projection, edge_width=1,
 
 v.digraph_wrapper(axs, node_scale=[5, 5, 5])
 plt.subplots_adjust(hspace=0)
-plt.savefig(f"{args.output}_results.png")
+plt.savefig(f'{args.output}_results.png')
