@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#Submit this script with: sbatch thefilename
+#For more details about each parameter, please check SLURM sbatch documentation https://slurm.schedmd.com/sbatch.html
+
+#SBATCH --time=10:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=20G   # memory per node
+#SBATCH -J "gambmerge"   # job name
+#SBATCH -o "logs/gambmerge-%j.out"   # job output file
+#SBATCH -e "logs/gambmerge-%j.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+VCFS=$1
+START=$2
+END=$3
+echo "merging VCFs $VCFS"
+pixi exec -c bioconda bcftools merge -Oz \
+    --output /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_${START}_${END}.vcf.gz \
+    $VCFS && pixi exec -c bioconda bcftools index --tbi /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_${START}_${END}.vcf.gz && echo "$START - $END merged $VCFS" >> logs/gambiae_merged.log
