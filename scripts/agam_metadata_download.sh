@@ -14,8 +14,15 @@ for v in "${releases[@]}"; do
     awk 'NR == 1 || FNR > 1' data/vo_agam_release/v$v/metadata/species_calls_aim_20220528/*/samples.species_aim.csv > data/vo_agam_release/v$v/metadata/all_samples_species_calls.csv
     # merge wgs sequence accession files
     awk 'NR == 1 || FNR > 1' data/vo_agam_release/v$v/metadata/general/*/wgs_snp_data.csv > data/vo_agam_release/v$v/metadata/all_samples_wgs_snp_data.csv
+    # merge cohort files
+    awk 'NR == 1 || FNR > 1' data/vo_agam_release/v$v/metadata/cohorts_*/*/samples.cohorts.csv > data/vo_agam_release/v$v/metadata/all_samples_cohorts.csv
     # merge the three files
-    python scripts/merge_sample_metadata.py data/vo_agam_release/v$v/metadata/all_samples_species_calls.csv data/vo_agam_release/v$v/metadata/all_samples_metadata.csv data/vo_agam_release/v$v/metadata/all_samples_wgs_snp_data.csv data/vo_agam_release/v$v/metadata/all_samples_merged.csv
+    python scripts/merge_sample_metadata.py \
+        data/vo_agam_release/v$v/metadata/all_samples_species_calls.csv \
+        data/vo_agam_release/v$v/metadata/all_samples_metadata.csv \
+        data/vo_agam_release/v$v/metadata/all_samples_wgs_snp_data.csv \
+        data/vo_agam_release/v$v/metadata/all_samples_cohorts.csv \
+        data/vo_agam_release/v$v/metadata/all_samples_merged.csv
 done
 # combine all releases into one file
 awk 'NR == 1 || FNR > 1' data/vo_agam_release/v*/metadata/all_samples_merged.csv > data/vo_agam_release/all_samples_metadata_merged.csv
