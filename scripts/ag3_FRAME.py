@@ -21,7 +21,7 @@ def genotype_array_to_FRAME(gt):
     gt = gt.T
     return gt
 
-def initialize_digraph(coordinates, edges, grid):
+def initialize_digraph(gt, coordinates, edges, grid):
     """
     inputs
     coordinates: string of path to coordinates file (in same order as samples) or numpy array of coordinates (in same order as samples)
@@ -29,9 +29,9 @@ def initialize_digraph(coordinates, edges, grid):
     grid: path to shapefile of grid nodes
     """
     # read spatial files
-    if typeof(coordinates) == str:
+    if type(coordinates) == str:
         coordinates = np.genfromtxt(coordinates, delimiter=',')
-    if typeof(edges) == str:
+    if type(edges) == str:
         edges = np.genfromtxt(edges, delimiter=',')
     outer, edges, grid, _ = prepare_graph_inputs(coord=coordinates,
                                                 ggrid=args.grid, 
@@ -44,8 +44,9 @@ def initialize_digraph(coordinates, edges, grid):
                                 coordinates,
                                 grid,
                                 edges)
+    return sp_digraph
 
-def lambda_cv(N=10, lamb_m_warmup=1e3, outpath):
+def lambda_cv(sp_digraph, outpath, N=10, lamb_m_warmup=1e3):
     """
     run lambda cross validation
     inputs
@@ -71,7 +72,7 @@ def lambda_cv(N=10, lamb_m_warmup=1e3, outpath):
     lamb_m_opt=float("{:.3g}".format(lamb_m_opt))
     return lamb_m_opt
 
-def fit_digraph(sp_digraph, lamb_m_opt, lamb_m_warmup=1e3, outpath)
+def fit_digraph(sp_digraph, lamb_m_opt, lamb_m_warmup=1e3):
     sp_digraph.fit(lamb_m=lamb_m_warmup, factr=1e10)
     logm = np.log(sp_digraph.m)
     logc = np.log(sp_digraph.c)
@@ -85,7 +86,7 @@ def fit_digraph(sp_digraph, lamb_m_opt, lamb_m_warmup=1e3, outpath)
                 )
     return sp_digraph
 
-def plot_digraph(sp_digraph):
+def plot_digraph(sp_digraph, outpath, projection):
     fig, axs= plt.subplots(2, 4, figsize=(16, 5), dpi=300,
                             subplot_kw={'projection': projection})
 

@@ -13,6 +13,7 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_GRID_PATH = PROJECT_ROOT / "data" / "vo_agam_release" / "gambiae_grid_coords.csv"
 DEFAULT_SAMPLING_PATH = PROJECT_ROOT / "data" / "vo_agam_release" / "gambiae_latlon.txt"
+DEFAULT_HULL_PATH = PROJECT_ROOT / "data" / "vo_agam_release" / "gambiae_hull_coords.csv"
 DEFAULT_OUTPUT_PATH = PROJECT_ROOT / "gambiae_grid_sampling_locations.png"
 
 
@@ -55,6 +56,12 @@ def parse_arguments() -> object:
         help="Text file containing sampling coordinates in latitude,longitude order",
     )
     parser.add_argument(
+        "--hull",
+        type=Path,
+        default=DEFAULT_HULL_PATH,
+        help="CSV containing convex hull coordinates in longitude,latitude order",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=DEFAULT_OUTPUT_PATH,
@@ -65,11 +72,20 @@ def parse_arguments() -> object:
 
 def main() -> None:
     arguments = parse_arguments()
-    grid = read_coordinates(arguments.grid, ["latitude", "longitude"])
-    sampling = read_coordinates(arguments.sampling, ["latitude", "longitude"])
+    grid = read_coordinates(arguments.grid, ["longitude", "latitude"])
+    sampling = read_coordinates(arguments.sampling, ["longitude", "latitude"])
+    hull = read_coordinates(arguments.hull, ["longitude", "latitude"])
 
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     figure, axes = plt.subplots(figsize=(10, 8), constrained_layout=True)
+    axes.plot(
+        hull["longitude"],
+        hull["latitude"],
+        color="tab:green",
+        linewidth=2,
+        label="Convex hull",
+        zorder=1,
+    )
     axes.scatter(
         grid["longitude"],
         grid["latitude"],
@@ -77,7 +93,7 @@ def main() -> None:
         color="tab:blue",
         alpha=0.75,
         label=f"Grid coordinates ({len(grid):,})",
-        zorder=1,
+        zorder=2,
     )
     axes.scatter(
         sampling["longitude"],
@@ -87,7 +103,7 @@ def main() -> None:
         alpha=0.35,
         edgecolors="none",
         label=f"Sampling locations ({len(sampling):,})",
-        zorder=2,
+        zorder=3,
     )
     axes.set_xlabel("Longitude")
     axes.set_ylabel("Latitude")

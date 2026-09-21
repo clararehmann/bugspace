@@ -25,3 +25,4 @@ networkx = "3.4.2.*"
 [pypi-dependencies]
 malariagen-data = ">=14.0.0, <15"
 frame = { git = "https://github.com/NovembreLab/frame.git" }
+kaleido = "==0.1.*"

@@ -19,7 +19,7 @@ def get_sampling_radius(locs):
 def generate_h3_grid(lat, # latitude of the center point 
                      lon, # longitude of the center point
                      radius, # radius in KM
-                     resolution # 0-15, higher resolution means smaller hexagons
+                     resolution, # 0-15, higher resolution means smaller hexagons
                      outpath # where to save shapefile to
                      ):
     center_h3 = h3.latlng_to_cell(lat, lon, resolution)
@@ -44,52 +44,52 @@ def generate_h3_grid(lat, # latitude of the center point
     gdf = gpd.GeoDataFrame({'h3_index': cells, 'geometry': polygons})
     gdf.set_crs(epsg=4326, inplace=True)  # set the coordinate reference system to WGS84
     # save to shapefile
-    grid.to_file(f'{outpath}_grid_resolution_{resolution}.shp', driver='ESRI Shapefile')
+    gdf.to_file(f'{outpath}_grid_resolution_{resolution}.shp', driver='ESRI Shapefile')
     # save to lat, lon csv
-    coords = [mapping(grid.geometry[i])['coordinates'][0][:-1] for i in range(len(grid))]
+    coords = [mapping(gdf.geometry[i])['coordinates'][0][:-1] for i in range(len(gdf))]
     coords = [coord for sublist in coords for coord in sublist]
-    coords = [tuple(list(coord)[::-1]) for coord in coords] # flip to lat, lon
+    coords = [tuple(list(coord)) for coord in coords] # flip to lat, lon
     coords = np.array(list(set(coords)))
     np.savetxt(f'{outpath}_grid_resolution_{resolution}_coordinates.csv', coords, delimiter=',', comments='', fmt='%1.6f')
     return
 
-def generate_hull(locs, outpath):
-    hull = ConvexHull(df[['longitude', 'latitude']].values)
-    hull = Polygon(df[['longitude', 'latitude']].values[hull.vertices])
-    hull = scale(hull, xfact=1.1, yfact=1.1, origin='centroid')
+def generate_hull(locs, outpath, x_fact=1.1, y_fact=1.1):
+    hull = ConvexHull(locs[['longitude', 'latitude']].values)
+    hull = Polygon(locs[['longitude', 'latitude']].values[hull.vertices])
+    hull = scale(hull, xfact=x_fact, yfact=y_fact, origin='centroid')
     lon, lat = hull.exterior.coords.xy
     hull = np.asarray(tuple(zip(lat, lon)))
-    np.savetxt(f'{outpath}_grid_resolution_{resolution}_hull.csv', hull, delimiter=',', comments='', fmt='%1.6f')
+    np.savetxt(f'{outpath}_hull.csv', hull, delimiter=',', comments='', fmt='%1.6f')
     return
 
 # read in sampling locations
-df = pd.read_csv('data/vo_agam_release/gambiae_latlon.txt', header=None, names=['latitude', 'longitude'], dtype='float')
-df = df.dropna() # drop any rows with missing values
-max_d = get_sampling_radius(df)
+#df = pd.read_csv('data/test_lonlat.txt', header=None, names=['longitude', 'latitude'], dtype='float')
+#df = df.dropna() # drop any rows with missing values
+#lat_c, lon_c, max_d = get_sampling_radius(df)
 # generate grid of hexagons around the centroid with a radius equal to the maximum distance
-grid = generate_h3_grid(lat_c, lon_c, max_d, resolution=2, outpath=)
-coords = [mapping(grid.geometry[i])['coordinates'][0][:-1] for i in range(len(grid))]
-coords = [coord for sublist in coords for coord in sublist]
-coords = [tuple(list(coord)[::-1]) for coord in coords] # flip to lat, lon
-coords = np.array(list(set(coords)))
+#grid = generate_h3_grid(lat_c, lon_c, max_d, resolution=1, outpath='data/test')
+#coords = [mapping(grid.geometry[i])['coordinates'][0][:-1] for i in range(len(grid))]
+#coords = [coord for sublist in coords for coord in sublist]
+#coords = [tuple(list(coord)[::-1]) for coord in coords] # flip to lat, lon
+#coords = np.array(list(set(coords)))
 
 # remove any coordinates that are outside the bounding box of the sampling locations
-hull = ConvexHull(df[['longitude', 'latitude']].values)
-hull = Polygon(df[['longitude', 'latitude']].values[hull.vertices])
-hull = scale(hull, xfact=1.1, yfact=1.1, origin='centroid') # scale the hull by 10% to include points just outside the convex hull
-coords = np.array([coord for coord in coords if hull.contains(Point(coord[1], coord[0]))])
+#hull = ConvexHull(df[['longitude', 'latitude']].values)
+#hull = Polygon(df[['longitude', 'latitude']].values[hull.vertices])
+#hull = scale(hull, xfact=10, yfact=10, origin='centroid') # scale the hull by 10% to include points just outside the convex hull
+#coords = np.array([coord for coord in coords if hull.contains(Point(coord[1], coord[0]))])
 # remove coordinates not on land
-earth = gpd.read_file('data/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
-earth = earth.dissolve(by='CONTINENT')
-africa = earth.loc['Africa','geometry']
-coords = np.array([coord for coord in coords if africa.contains(Point(coord[1], coord[0]))])
+#earth = gpd.read_file('data/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+#earth = earth.dissolve(by='CONTINENT')
+#africa = earth.loc['Africa','geometry']
+#coords = np.array([coord for coord in coords if africa.contains(Point(coord[1], coord[0]))])
 #coords = pd.DataFrame({'lat':[coord[0] for coord in coords], 'lon':[coord[1] for coord in coords]})
 #coords['geometry'] = coords.apply(lambda x: Point((x.lon, x.lat)), axis=1)
 #coords = gpd.GeoDataFrame(coords, geometry='geometry')
 #coords.set_crs("EPSG:4326", inplace=True)
 #coords.to_file('data/vo_agam_release/gambiae_grid.shp', driver='ESRI Shapefile')
-np.savetxt('data/vo_agam_release/gambiae_grid_coords.csv', coords, delimiter=',', comments='', fmt='%1.6f')
+#np.savetxt('data/vo_agam_release/gambiae_grid_coords.csv', coords, delimiter=',', comments='', fmt='%1.6f')
 # save coordinates of hull
-lon, lat = hull.exterior.coords.xy
-hull = np.asarray(tuple(zip(lat, lon)))
-np.savetxt('data/vo_agam_release/gambiae_hull_coords.csv', hull, delimiter=',', comments='', fmt='%1.6f')
+#lon, lat = hull.exterior.coords.xy
+#hull = np.asarray(tuple(zip(lon, lat)))
+#np.savetxt('data/test_hull_coords.csv', hull, delimiter=',', comments='', fmt='%1.6f')

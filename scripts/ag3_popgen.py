@@ -8,24 +8,29 @@ import allel
 import malariagen_data
 import plotly.express as px
 import itertools
+ag3 = malariagen_data.Ag3()
 
 def run_plot_pca(sample_query, region='3L', n_snps=100000, site_mask='gamb_colu'):
     pca_df, evr_bf = ag3.pca(region=region,
                              n_snps=n_snps,
                              site_mask=site_mask,
-                             sample_query=sample_query)
+                             sample_query=sample_query,
+                             sample_query_options = {'engine':'python'})
     plot = ag3.plot_pca_coords(pca_df, show=False)
     plot.update_layout(
-        xaxis={title:{text:f'PC1: {np.round(evr_bf[0]*100, decimals=3)}% variance explained'}},
-        yaxis={title:{text:f'PC2: {np.round(evr_bf[1]*100, decimals=3)}% variance explained'}}
+        xaxis_title=f'PC1: {np.round(evr_bf[0]*100, decimals=3)}% variance explained',
+        yaxis_title=f'PC2: {np.round(evr_bf[1]*100, decimals=3)}% variance explained'
     )
     return plot
 
-def run_popgen_stats(sample_query, cohorts='admin2_year', site_mask='gamb_colu'):
+def run_popgen_stats(sample_query, cohorts='admin2_year', site_mask='gamb_colu', region='3L'):
     stats_df = ag3.diversity_stats(
         sample_query=sample_query,
         cohorts=cohorts,
-        site_mask=site_mask
+        cohort_size=1,
+        region=region,
+        site_mask=site_mask,
+        sample_query_options = {'engine':'python'}
     )
     return stats_df
 
@@ -33,7 +38,8 @@ def get_zarr_genotypes(sample_query, region='3L', site_mask='gamb_colu'):
     gt = ag3.snp_calls(
         region=region,
         sample_query=sample_query,
-        site_mask=site_mask
+        site_mask=site_mask,
+        sample_query_options={'engine':'python'}
     )
     gt = allel.GenotypeDaskArray(gt["call_genotype"].data)
     return gt

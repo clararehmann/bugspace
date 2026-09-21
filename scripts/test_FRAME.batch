@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1   # number of tasks
 #SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
 #SBATCH --nodes=1   # number of nodes
-#SBATCH --mem=1G   # memory per node
+#SBATCH --mem=75G   # memory per node
 #SBATCH -J "frametest"   # job name
 #SBATCH -o "logs/frametest-%j.out"   # job output file
 #SBATCH -e "logs/frametest-%j.err"   # job error file
@@ -16,4 +16,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-pixi run python scripts/agam_gambiae_FRAME.py --vcf /hps/nobackup/jlees/rehmann/vo_agam_release/vcfs/gambiae/gambiae_merged_1551_1600.vcf.gz --chromosome 2L --start 1 --end 10000 --coordinates data/test_latlon.txt --grid data/vo_agam_release/gambiae_grid.shp --edges data/vo_agam_release/gambiae_hull_coords.csv --output test
+pixi run python scripts/uganda_FRAME.py

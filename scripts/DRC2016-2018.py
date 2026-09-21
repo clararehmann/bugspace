@@ -13,7 +13,7 @@ ag3 = malariagen_data.Ag3()
 
 
 
-def get_year_query(year, sample_sets=sample_sets):
+def get_year_query(year, sample_sets):
     # generate query string for 2017 samples from Uganda in that month
     df_samples = ag3.sample_metadata(sample_sets=sample_sets, sample_query=f"country=='The Democratic Republic of Congo' & year=={year} & taxon=='gambiae'")
     samples = df['sample_id'].tolist()
@@ -25,11 +25,11 @@ os.makedirs(outpath, exist_ok=True)
 
 years=[2016,2017,2018]
 sample_sets = [f'3.{i}' for i in range(17)]
-
 # get metadata
 year=years[0]
 sample_query = get_year_query(year, sample_sets=sample_sets)
 sample_metadata = ag3.sample_metadata(sample_query=sample_query)
+print(f'Year {year}: {len(sample_metadata)} samples')
 # run PCA on samples
 pca_plot = run_plot_pca(sample_query)
 pca_plot.write_image(f'{outpath}{year}_PCA.png')
