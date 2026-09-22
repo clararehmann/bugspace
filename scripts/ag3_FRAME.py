@@ -34,7 +34,7 @@ def initialize_digraph(gt, coordinates, edges, grid):
     if type(edges) == str:
         edges = np.genfromtxt(edges, delimiter=',')
     outer, edges, grid, _ = prepare_graph_inputs(coord=coordinates,
-                                                ggrid=args.grid, 
+                                                ggrid=grid, 
                                                 buffer=0,
                                                 outer=edges)
 

@@ -23,11 +23,11 @@ def run_plot_pca(sample_query, region='3L', n_snps=100000, site_mask='gamb_colu'
     )
     return plot
 
-def run_popgen_stats(sample_query, cohorts='admin2_year', site_mask='gamb_colu', region='3L'):
+def run_popgen_stats(sample_query, cohort_size, cohorts='admin2_year', site_mask='gamb_colu', region='3L'):
     stats_df = ag3.diversity_stats(
         sample_query=sample_query,
         cohorts=cohorts,
-        cohort_size=1,
+        cohort_size=cohort_size,
         region=region,
         site_mask=site_mask,
         sample_query_options = {'engine':'python'}
@@ -43,6 +43,31 @@ def get_zarr_genotypes(sample_query, region='3L', site_mask='gamb_colu'):
     )
     gt = allel.GenotypeDaskArray(gt["call_genotype"].data)
     return gt
+
+def between_cohort_fst(sample_metadata, region='3L', site_mask='gamb_colu'):
+    country = np.unique(sample_metadata.country)
+    year = np.unique(sample_metadata.year)
+    month = np.unique(sample_metadata.month)
+    cohorts = np.unique(sample_metadata.cohort_admin2_year)
+    cohort_combinations = list(itertools.product(cohorts, cohorts))
+    fsts = np.empty(len(cohort_combinations))
+    stderrs = np.empty(len(cohort_combinations))
+    cohort_sizes = [len(sample_metadata[sample_metadata.cohort_admin2_year==c]) for c in np.unique(sample_metadata.cohort_admin2_year)]
+    for i in range(len(cohort_combinations)):
+        if cohort_combinations[i][0] == cohort_combinations[i][1]:
+            fsts[i] = 0
+            stderrs[i] = 0
+        else:
+            ch1 = f"taxon=='gambiae' & country=={country} & year=={year} & month=={month} & cohort_admin2_year=='{cohort_combinations[i][0]}'"
+            ch2 = f"taxon=='gambiae' & country=={country} & year=={year} & month=={month} & cohort_admin2_year=='{cohort_combinations[i][1]}'"
+            fst, stderr = ag3.average_fst(region=region,
+                                      cohort1_query=ch1,
+                                      cohort2_query=ch2,
+                                      site_mask=site_mask,
+                                      min_cohort_size=min(cohort_sizes))
+            fsts[i] = fst
+            stderrs[i] = stderr
+    return cohort_combinations, fsts, stderrs
 
 def label_location_groups(sample_metadata):
     """

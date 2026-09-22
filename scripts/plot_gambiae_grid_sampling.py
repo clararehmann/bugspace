@@ -73,7 +73,7 @@ def parse_arguments() -> object:
 def main() -> None:
     arguments = parse_arguments()
     grid = read_coordinates(arguments.grid, ["longitude", "latitude"])
-    sampling = read_coordinates(arguments.sampling, ["longitude", "latitude"])
+    sampling = pd.read_csv(arguments.sampling)
     hull = read_coordinates(arguments.hull, ["longitude", "latitude"])
 
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

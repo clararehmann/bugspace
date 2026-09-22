@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --array=0-7
+#SBATCH --time=1:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=50G   # memory per node
+#SBATCH -J "ugframe"   # job name
+#SBATCH -o "logs/ugframe-%A-%a.out"   # job output file
+#SBATCH -e "logs/ugframe-%A-%a.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+months=( 3 4 5 6 7 8 9 11 )
+pixi run python scripts/uganda_FRAME.py ${months[$SLURM_ARRAY_TASK_ID]}

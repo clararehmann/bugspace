@@ -58,7 +58,7 @@ def generate_hull(locs, outpath, x_fact=1.1, y_fact=1.1):
     hull = Polygon(locs[['longitude', 'latitude']].values[hull.vertices])
     hull = scale(hull, xfact=x_fact, yfact=y_fact, origin='centroid')
     lon, lat = hull.exterior.coords.xy
-    hull = np.asarray(tuple(zip(lat, lon)))
+    hull = np.asarray(tuple(zip(lon,lat)))
     np.savetxt(f'{outpath}_hull.csv', hull, delimiter=',', comments='', fmt='%1.6f')
     return
 
