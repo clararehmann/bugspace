@@ -51,7 +51,7 @@ def generate_h3_grid(lat, # latitude of the center point
     coords = [tuple(list(coord)) for coord in coords] # flip to lat, lon
     coords = np.array(list(set(coords)))
     np.savetxt(f'{outpath}_grid_resolution_{resolution}_coordinates.csv', coords, delimiter=',', comments='', fmt='%1.6f')
-    return
+    return gdf
 
 def generate_hull(locs, outpath, x_fact=1.1, y_fact=1.1):
     hull = ConvexHull(locs[['longitude', 'latitude']].values)
