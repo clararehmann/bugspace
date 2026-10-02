@@ -21,7 +21,7 @@ def run_plot_pca(sample_query, region='3L', n_snps=100000, site_mask='gamb_colu'
         xaxis_title=f'PC1: {np.round(evr_bf[0]*100, decimals=3)}% variance explained',
         yaxis_title=f'PC2: {np.round(evr_bf[1]*100, decimals=3)}% variance explained'
     )
-    return plot
+    return pca_df, evr_bf, plot
 
 def run_popgen_stats(sample_query, cohort_size, cohorts='admin2_year', site_mask='gamb_colu', region='3L'):
     stats_df = ag3.diversity_stats(
@@ -44,11 +44,8 @@ def get_zarr_genotypes(sample_query, region='3L', site_mask='gamb_colu'):
     gt = allel.GenotypeDaskArray(gt["call_genotype"].data)
     return gt
 
-def between_cohort_fst(sample_metadata, region='3L', site_mask='gamb_colu'):
-    country = np.unique(sample_metadata.country)
-    year = np.unique(sample_metadata.year)
-    month = np.unique(sample_metadata.month)
-    cohorts = np.unique(sample_metadata.cohort_admin2_year)
+def between_cohort_fst(sample_metadata, cohort_id, region='3L', site_mask='gamb_colu'):
+    cohorts = np.unique(sample_metadata[cohort_id])
     cohort_combinations = list(itertools.product(cohorts, cohorts))
     fsts = np.empty(len(cohort_combinations))
     stderrs = np.empty(len(cohort_combinations))
@@ -58,8 +55,8 @@ def between_cohort_fst(sample_metadata, region='3L', site_mask='gamb_colu'):
             fsts[i] = 0
             stderrs[i] = 0
         else:
-            ch1 = f"taxon=='gambiae' & country=={country} & year=={year} & month=={month} & cohort_admin2_year=='{cohort_combinations[i][0]}'"
-            ch2 = f"taxon=='gambiae' & country=={country} & year=={year} & month=={month} & cohort_admin2_year=='{cohort_combinations[i][1]}'"
+            ch1 = f"taxon=='gambiae' & {cohort_id}=='{cohort_combinations[i][0]}'"
+            ch2 = f"taxon=='gambiae' & {cohort_id}=='{cohort_combinations[i][1]}'"
             fst, stderr = ag3.average_fst(region=region,
                                       cohort1_query=ch1,
                                       cohort2_query=ch2,

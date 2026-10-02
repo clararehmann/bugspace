@@ -46,11 +46,11 @@ def initialize_digraph(gt, coordinates, edges, grid):
                                 edges)
     return sp_digraph
 
-def lambda_cv(sp_digraph, outpath, N=10, lamb_m_warmup=1e3):
+def lambda_cv(sp_digraph, outpath, N, lamb_m_warmup=1e3):
     """
     run lambda cross validation
     inputs
-    N: integer number of cross-validation runs (default 10)
+    N: integer number of cross-validation runs 
     """
     # N fold cross validation to find lambda
     lamb_m_grid = np.geomspace(1e-3,1e3,20)[::-1]

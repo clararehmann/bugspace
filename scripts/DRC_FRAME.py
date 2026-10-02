@@ -14,17 +14,18 @@ from ag3_popgen import get_zarr_genotypes
 from gambiae_grid import *
 from ag3_FRAME import *
 
-def get_month_query(month, sample_sets):
-    # generate query string for 2017 samples from Uganda in that month
-    df_samples = ag3.sample_metadata(sample_sets=sample_sets, sample_query=f"country=='Uganda' & year==2017 & taxon=='gambiae' & month=={month}")
-    samples = df_samples['sample_id'].tolist()
-    sample_query = '|'.join([f"sample_id=='{s}'" for s in samples])
+def get_year_query(year, sample_sets):
+    # generate query string for {year} samples from DRC
+    sample_query=f"country=='Democratic Republic of the Congo' & year=={year} & taxon=='gambiae'"
+    df_samples = ag3.sample_metadata(sample_sets=sample_sets, sample_query=sample_query)
     return df_samples, sample_query
 
+outpath='out/DRC/'
+os.makedirs(outpath, exist_ok=True)
+
 sample_sets = [f'3.{i}' for i in range(17)]
-months=[3,4,5,6,7,8,9,11]
-month=sys.argv[1]
-sample_metadata, sample_query = get_month_query(month, sample_sets)
+year=sys.argv[1]
+sample_metadata, sample_query = get_year_query(year, sample_sets)
 genotypes = ag3.snp_calls(
                         region='3L',
                         sample_query=sample_query,
@@ -35,12 +36,12 @@ samples = genotypes['sample_id'].values
 genotypes = allel.GenotypeArray(genotypes['call_genotype'].data)
 sample_metadata.set_index('sample_id', inplace=True)
 sample_metadata = sample_metadata.reindex(samples)
-sample_metadata.to_csv(f"out/Uganda2017/{month}_sample_metadata.csv")
+sample_metadata.to_csv(f"out/DRC/{year}_metadata.csv")
 # make sampling grid and edges
 lat_c, lon_c, max_d = get_sampling_radius(sample_metadata)
 projection = ccrs.EquidistantConic(central_longitude = lon_c, central_latitude = lat_c)
-resolution=5
-gridpath=f'data/Uganda2017/{month}'
+resolution=3
+gridpath=f'data/DRC/{year}'
 grid = generate_h3_grid(lat_c, lon_c, max_d, resolution=resolution, outpath=gridpath)
 hull = generate_hull(sample_metadata, gridpath, x_fact=1.5, y_fact=1.5)
 # prep coordinates for FRAME
@@ -58,18 +59,18 @@ else:
     N=10
 
 # lambda cross-validation
-lamb_m_opt = lambda_cv(spdigraph, f'out/Uganda2017/{month}_resolution_{resolution}', N=N)
+lamb_m_opt = lambda_cv(spdigraph, f'out/DRC/{year}', N=N)
 
 # fit digraph
 spdigraph_fit = fit_digraph(spdigraph, lamb_m_opt)
 
 # plot full results
-plot_digraph(spdigraph_fit, f'out/Uganda2017/{month}_resolution_{resolution}', projection)
+plot_digraph(spdigraph_fit, f'out/DRC/{year}', projection)
 
 # plot difference graph
 fig = plt.figure(dpi=300)
 ax= fig.add_subplot(1, 1, 1, projection=projection)
-v = Vis(ax, spdigraph, projection=projection, edge_width=1,
+v = Vis(ax, sp_digraph, projection=projection, edge_width=1,
         edge_alpha=1, edge_zorder=100, sample_pt_size=20,
         obs_node_size=5, sample_pt_color="black",
         cbar_font_size=5, cbar_ticklabelsize=5, 
@@ -86,7 +87,7 @@ v.draw_migration_rates(ax,
                        mode='Difference',
                        draw_map=True,
                        draw_nodes=True,)
-plt.savefig(f'out/Uganda2017/{month}_resolution_{resolution}_difference.png')
+plt.savefig(f'out/DRC/{year}_difference.png')
 
 # plot full graph
 fig = plt.figure(dpi=300)
@@ -95,4 +96,4 @@ v.draw_migration_rates(ax,
                         mode='Full',
                         draw_map=True,
                         draw_nodes=True,)
-plt.savefig(f'out/Uganda2017/{month}_resolution_{resolution}_full.png')
+plt.savefig(f'out/DRC/{year}_full.png')

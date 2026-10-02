@@ -17,9 +17,9 @@ from pyproj import Geod
 import malariagen_data
 ag3 = malariagen_data.Ag3()
 
-def get_month_query(month, sample_sets):
-    # generate query string for 2017 samples from Uganda in that month
-    sample_query=f"country=='Uganda' & year==2017 & taxon=='gambiae' & month=={month}"
+def get_year_query(year, sample_sets):
+    # generate query string for {year} samples from DRC
+    sample_query=f"country=='Democratic Republic of the Congo' & year=={year} & taxon=='gambiae'"
     df_samples = ag3.sample_metadata(sample_sets=sample_sets, sample_query=sample_query)
     return df_samples, sample_query
 
@@ -44,8 +44,8 @@ def haplotype_between(ind1, ind2, gt, pos):
     return maximum
 
 sample_sets = [f'3.{i}' for i in range(17)]
-month=sys.argv[1]
-sample_metadata, sample_query = get_month_query(month, sample_sets=sample_sets)
+year=sys.argv[1]
+sample_metadata, sample_query = get_year_query(year, sample_sets=sample_sets)
 
 haps = ag3.haplotypes(
     region='3L',
@@ -59,7 +59,7 @@ sample_metadata = sample_metadata.reindex(samples)
 # generate grid
 lat_c, lon_c, max_d = get_sampling_radius(sample_metadata)
 resolution=4
-gridpath=f'test'
+gridpath=f'data/DRC/{year}_haplotype'
 grid = generate_h3_grid(lat_c, lon_c, max_d, resolution=resolution, outpath=gridpath)
 # assign cells to samples
 sample_metadata['h3_index'] = None
@@ -90,7 +90,7 @@ for i in range(len(samples)):
 df = pd.DataFrame({'length':lengths,
                    'hex_distance':hex_dists,
                    'km_distance':km_dists})
-df.to_csv(f'out/Uganda2017/{month}_haplotype_distances.csv')
+df.to_csv(f'out/DRC/{year}_haplotype_distances.csv')
 
 #print(sample_metadata.iloc[i1].longitude, sample_metadata.iloc[i1].latitude)
 #print(sample_metadata.iloc[i2].longitude, sample_metadata.iloc[i2].latitude)

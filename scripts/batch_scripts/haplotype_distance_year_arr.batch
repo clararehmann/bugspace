@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --array=0-5
+#SBATCH --time=10:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=30G   # memory per node
+#SBATCH -J "hap"   # job name
+#SBATCH -o "logs/hap-%A-%a.out"   # job output file
+#SBATCH -e "logs/hap-%A-%a.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+years=( 2017 2018 2019 2020 2021 2022 )
+pixi run python scripts/haplotype_distance.py --year ${years[$SLURM_ARRAY_TASK_ID]} --out out/${years[$SLURM_ARRAY_TASK_ID]}

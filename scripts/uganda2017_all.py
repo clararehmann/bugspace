@@ -17,11 +17,9 @@ Investigating how population structure and diversity changes over the course of 
 Does seasonality influence this? And if so, it should be incorporated into our spatial model
 """
 
-def get_month_query(month, sample_sets):
-    # generate query string for 2017 samples from Uganda in that month
-    df_samples = ag3.sample_metadata(sample_sets=sample_sets, sample_query=f"country=='Uganda' & year==2017 & taxon=='gambiae' & month=={month}")
-    samples = df_samples['sample_id'].tolist()
-    sample_query = '|'.join([f"sample_id=='{s}'" for s in samples])
+def get_metadata(sample_sets):
+    sample_query="country=='Uganda' & year==2017 & taxon=='gambiae'"
+    df_samples = ag3.sample_metadata(sample_sets=sample_sets, sample_query=sample_query)
     return df_samples, sample_query
 outpath='out/Uganda2017/'
 os.makedirs(outpath, exist_ok=True)
@@ -30,29 +28,28 @@ months=[3,4,5,6,7,8,9,11]
 sample_sets = [f'3.{i}' for i in range(17)]
 
 # get metadata
-month=sys.argv[1]
-sample_metadata, sample_query = get_month_query(month, sample_sets=sample_sets)
-print(f'Month {month}: {len(sample_metadata)} samples')
-sample_query=f"country=='Uganda' & year==2017 & taxon=='gambiae' & month=={month}"
+sample_metadata, sample_query = get_metadata(sample_sets=sample_sets)
+print(f'2017: {len(sample_metadata)} samples')
+sample_query=f"country=='Uganda' & year==2017 & taxon=='gambiae'"
 # run PCA on samples
-print('Running PCA...')
-pca_df, evr_bf, pca_plot = run_plot_pca(sample_query)
-pca_df.to_csv(f'{outpath}{month}_pca.csv')
-np.savetxt(f'{outpath}{month}_pca_evr.txt', evr_bf)
-plotly.offline.plot(pca_plot, filename=f'{outpath}{month}_PCA.html')
+#print('Running PCA...')
+#pca_df, evr_bf, pca_plot = run_plot_pca(sample_query)
+#pca_df.to_csv(f'{outpath}all_pca.csv')
+#np.savetxt(f'{outpath}all_pca_evr.txt', evr_bf)
+#plotly.offline.plot(pca_plot, filename=f'{outpath}all_PCA.html')
 # get popgen stats
 ## decide if these should be all saved to one dataframe over the course of the year...
-print('Calculating popgen stats...')
-cohort_sizes = [len(sample_metadata[sample_metadata.cohort_admin2_year==c]) for c in np.unique(sample_metadata.cohort_admin2_year)]
-stats_df = run_popgen_stats(sample_query, min(cohort_sizes))
-stats_df.to_csv(f'{outpath}{month}_stats.csv')
+#print('Calculating popgen stats...')
+#cohort_sizes = [len(sample_metadata[sample_metadata.cohort_admin2_year==c]) for c in np.unique(sample_metadata.cohort_admin2_year)]
+#stats_df = run_popgen_stats(sample_query, min(cohort_sizes))
+#stats_df.to_csv(f'{outpath}all_stats.csv')
 print('Calculating between-cohort FST')
 #genotypes = get_zarr_genotypes(sample_query)
 # get between-location FST
 #sample_metadata, fst_values = pairwise_fst(sample_metadata, genotypes)
 #print(np.mean(fst_values.values()), np.median(fst_values.values()), min(fst_values.values()), max(fst_values.values()))
-ccombs, fsts, stderrs = between_cohort_fst(sample_metadata)
+ccombs, fsts, stderrs = between_cohort_fst(sample_metadata, 'cohort_admin2_month')
 ch1 = [c[0] for c in ccombs]
 ch2 = [c[1] for c in ccombs]
 fst_df = pd.DataFrame({'cohort_1':ch1, 'cohort_2':ch2, 'average_fst':fsts, 'standard_error':stderrs})
-fst_df.to_csv(f'{outpath}{month}_fst.csv')
+fst_df.to_csv(f'{outpath}all_fst.csv')

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --array=0-7
-#SBATCH --time=1:00:00   # walltime
+#SBATCH --time=10:00:00   # walltime
 #SBATCH --ntasks=1   # number of tasks
 #SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
 #SBATCH --nodes=1   # number of nodes

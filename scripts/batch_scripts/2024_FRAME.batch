@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH --time=24:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=500G   # memory per node
+#SBATCH -J "2024frame"   # job name
+#SBATCH -o "logs/2024frame-%J.out"   # job output file
+#SBATCH -e "logs/2024frame-%J.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+pixi run python scripts/2024_FRAME.py

@@ -1,4 +1,5 @@
 import pandas as pd, numpy as np
+from math import ceil
 import h3
 import geopandas as gpd
 from pyproj import Geod
@@ -20,37 +21,48 @@ def generate_h3_grid(lat, # latitude of the center point
                      lon, # longitude of the center point
                      radius, # radius in KM
                      resolution, # 0-15, higher resolution means smaller hexagons
-                     outpath # where to save shapefile to
+                     outpath=None # where to save shapefile to
                      ):
     center_h3 = h3.latlng_to_cell(lat, lon, resolution)
     # get the hexagons within the specified radius
-    k_distance = radius / (h3.edge_length(h3.origin_to_directed_edges(center_h3)[0], unit='km'))
-    print(radius, k_distance, h3.edge_length(h3.origin_to_directed_edges(center_h3)[0], unit='km'))
+    edge_length = h3.edge_length(h3.origin_to_directed_edges(center_h3)[0], unit='km')
+    k_distance = ceil(radius / edge_length)
+    print(radius, k_distance, edge_length)
     hexagons = h3.grid_disk(center_h3, k_distance)
 
     # convert hexagons to geoJSON geometries
     polygons = []
     cells = []
-    vertexes = []
+    frame_polygons = []
+    frame_cells = []
     for cell in hexagons:
         # polygon of cell
         boundary = h3.cell_to_boundary(cell)
         # flip for Shapely
         boundary = [(lon, lat) for lat, lon in boundary]
-        polygons.append(Polygon(boundary))
+        polygon = Polygon(boundary)
+        polygons.append(polygon)
         cells.append(cell)
+        for i in range(1, len(boundary) - 1):
+            frame_polygons.append(Polygon([boundary[0], boundary[i], boundary[i + 1]]))
+            frame_cells.append(cell)
 
     # create a GeoDataFrame
     gdf = gpd.GeoDataFrame({'h3_index': cells, 'geometry': polygons})
     gdf.set_crs(epsg=4326, inplace=True)  # set the coordinate reference system to WGS84
     # save to shapefile
-    gdf.to_file(f'{outpath}_grid_resolution_{resolution}.shp', driver='ESRI Shapefile')
-    # save to lat, lon csv
-    coords = [mapping(gdf.geometry[i])['coordinates'][0][:-1] for i in range(len(gdf))]
-    coords = [coord for sublist in coords for coord in sublist]
-    coords = [tuple(list(coord)) for coord in coords] # flip to lat, lon
-    coords = np.array(list(set(coords)))
-    np.savetxt(f'{outpath}_grid_resolution_{resolution}_coordinates.csv', coords, delimiter=',', comments='', fmt='%1.6f')
+    if outpath:
+        frame_gdf = gpd.GeoDataFrame(
+            {'h3_index': frame_cells, 'geometry': frame_polygons},
+            crs='EPSG:4326',
+        )
+        frame_gdf.to_file(f'{outpath}_grid_resolution_{resolution}.shp', driver='ESRI Shapefile')
+        # save to lat, lon csv
+        coords = [mapping(gdf.geometry[i])['coordinates'][0][:-1] for i in range(len(gdf))]
+        coords = [coord for sublist in coords for coord in sublist]
+        coords = [tuple(list(coord)) for coord in coords] # flip to lat, lon
+        coords = np.array(list(set(coords)))
+        np.savetxt(f'{outpath}_grid_resolution_{resolution}_coordinates.csv', coords, delimiter=',', comments='', fmt='%1.6f')
     return gdf
 
 def generate_hull(locs, outpath, x_fact=1.1, y_fact=1.1):

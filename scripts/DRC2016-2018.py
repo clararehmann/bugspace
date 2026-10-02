@@ -1,5 +1,5 @@
 import numpy as np, pandas as pd
-import os
+import os, sys
 import dask
 import dask.array as da
 from dask.diagnostics.progress import ProgressBar
@@ -16,11 +16,11 @@ ag3 = malariagen_data.Ag3()
 
 def get_year_query(year, sample_sets):
     # generate query string for {year} samples from DRC
-    sample_query=f"country=='The Democratic Republic of Congo' & year=={year} & taxon=='gambiae'"
+    sample_query=f"country=='Democratic Republic of the Congo' & year=={year} & taxon=='gambiae'"
     df_samples = ag3.sample_metadata(sample_sets=sample_sets, sample_query=sample_query)
     return df_samples, sample_query
 
-outpath='out/DRC/
+outpath='out/DRC/'
 os.makedirs(outpath, exist_ok=True)
 
 years=[2016,2017,2018]
@@ -31,7 +31,9 @@ sample_metadata, sample_query = get_year_query(year, sample_sets=sample_sets)
 print(f'Year {year}: {len(sample_metadata)} samples')
 # run PCA on samples
 print('Running PCA...')
-pca_plot = run_plot_pca(sample_query)
+pca_df, evr_bf, pca_plot = run_plot_pca(sample_query)
+pca_df.to_csv(f'{outpath}{year}_pca.csv')
+np.savetxt(f'{outpath}{year}_pca_evr.txt', evr_bf)
 plotly.offline.plot(pca_plot, filename=f'{outpath}{year}_PCA.png')
 # get popgen stats
 print('Calculating popgen stats...')
