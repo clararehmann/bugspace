@@ -22,7 +22,7 @@ def get_query(sample_sets):
 sample_sets = [f'3.{i}' for i in range(17)]
 sample_metadata, sample_query = get_query(sample_sets)
 genotypes = ag3.snp_calls(
-                        region='3L',
+                        region='3L:1000000-1500000',
                         sample_query=sample_query,
                         site_mask='gamb_colu',
                         sample_query_options={'engine':'python'}
@@ -34,9 +34,7 @@ sample_metadata = sample_metadata.reindex(samples)
 # make sampling grid and edges
 lat_c, lon_c, max_d = get_sampling_radius(sample_metadata)
 projection = ccrs.EquidistantConic(central_longitude = lon_c, central_latitude = lat_c)
-resolution=2
 gridpath=f'data/2024'
-grid = generate_h3_grid(lat_c, lon_c, max_d, resolution=resolution, outpath=gridpath)
 hull = generate_hull(sample_metadata, gridpath, x_fact=1.5, y_fact=1.5)
 # prep coordinates for FRAME
 coordinates = sample_metadata[['longitude','latitude']].to_numpy()
@@ -44,50 +42,67 @@ coordinates = sample_metadata[['longitude','latitude']].to_numpy()
 
 genotypes = genotype_array_to_FRAME(genotypes)
 
-# make spatial digraph
-spdigraph = initialize_digraph(genotypes, coordinates, f'{gridpath}_hull.csv', f'{gridpath}_grid_resolution_{resolution}.shp')
+os.makedirs('out', exist_ok=True)
 
-if spdigraph.n_observed_nodes < 10:
-    N = spdigraph.n_observed_nodes-1
-else:
-    N=10
+for resolution in [4]:
+    generate_h3_grid(lat_c, lon_c, max_d, resolution=resolution, outpath=gridpath)
 
-# lambda cross-validation
-lamb_m_opt = lambda_cv(spdigraph, f'out/2024_resolution_{resolution}', N=N)
-print(f'Optimal lambda: {lamb_m_opt}')
-# fit digraph
-spdigraph_fit = fit_digraph(spdigraph, lamb_m_opt)
+    # make spatial digraph
+    spdigraph = initialize_digraph(
+        genotypes,
+        coordinates,
+        f'{gridpath}_hull.csv',
+        f'{gridpath}_grid_resolution_{resolution}.shp',
+    )
+    print(
+        f'Resolution {resolution}: {spdigraph.number_of_nodes()} graph nodes, '
+        f'{spdigraph.n_observed_nodes} observed nodes'
+    )
 
-# plot full results
-plot_digraph(spdigraph_fit, f'out/2024_resolution_{resolution}', projection)
+    if spdigraph.n_observed_nodes < 10:
+        N = spdigraph.n_observed_nodes - 1
+    else:
+        N = 10
 
-# plot difference graph
-fig = plt.figure(dpi=300)
-ax= fig.add_subplot(1, 1, 1, projection=projection)
-v = Vis(ax, spdigraph, projection=projection, edge_width=1,
-        edge_alpha=1, edge_zorder=100, sample_pt_size=20,
-        obs_node_size=5, sample_pt_color="black",
-        cbar_font_size=5, cbar_ticklabelsize=5, 
-        cbar_bbox_to_anchor=(0.05, 0.2), 
-        cbar_width="15%",
-        cbar_height="5%",
-        compass_bbox_to_anchor=(0, 0),
-        compass_font_size=5,
-        compass_radius=0.2,
-        compass_pad=0.2,
-        mutation_scale=8)
+    outpath = f'out/2024_resolution_{resolution}'
 
-v.draw_migration_rates(ax,
-                       mode='Difference',
-                       draw_map=True,
-                       draw_nodes=True,)
-plt.savefig(f'out/2024_resolution_{resolution}_difference.png')
+    # lambda cross-validation
+    lamb_m_opt = lambda_cv(spdigraph, outpath, N=N)
+    print(f'Resolution {resolution}, optimal lambda: {lamb_m_opt}')
 
-# plot full graph
-fig = plt.figure(dpi=300)
-ax = fig.add_subplot(1, 1, 1, projection=projection)
-v.draw_migration_rates(ax,
-                        mode='Full',
-                        draw_map=True,
-                        draw_nodes=True,)
-plt.savefig(f'out/2024_resolution_{resolution}_full.png')
+    # fit digraph
+    spdigraph_fit = fit_digraph(spdigraph, lamb_m_opt)
+
+    # plot full results
+    plot_digraph(spdigraph_fit, outpath, projection)
+
+    # plot difference graph
+    fig = plt.figure(dpi=300)
+    ax = fig.add_subplot(1, 1, 1, projection=projection)
+    v = Vis(ax, spdigraph_fit, projection=projection, edge_width=1,
+            edge_alpha=1, edge_zorder=100, sample_pt_size=20,
+            obs_node_size=5, sample_pt_color="black",
+            cbar_font_size=5, cbar_ticklabelsize=5,
+            cbar_bbox_to_anchor=(0.05, 0.2),
+            cbar_width="15%",
+            cbar_height="5%",
+            compass_bbox_to_anchor=(0, 0),
+            compass_font_size=5,
+            compass_radius=0.2,
+            compass_pad=0.2,
+            mutation_scale=8)
+
+    v.draw_migration_rates(ax,
+                           mode='Difference',
+                           draw_map=True,
+                           draw_nodes=True,)
+    plt.savefig(f'{outpath}_difference.png')
+
+    # plot full graph
+    fig = plt.figure(dpi=300)
+    ax = fig.add_subplot(1, 1, 1, projection=projection)
+    v.draw_migration_rates(ax,
+                            mode='Full',
+                            draw_map=True,
+                            draw_nodes=True,)
+    plt.savefig(f'{outpath}_full.png')

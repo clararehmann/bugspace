@@ -2,7 +2,7 @@
 authors = ["clararehmann <clara.r138@gmail.com>"]
 channels = ["conda-forge", "bioconda"]
 name = "bugspace"
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-arm64"]
 version = "0.1.0"
 
 [tasks]
@@ -25,4 +25,3 @@ networkx = "3.4.2.*"
 [pypi-dependencies]
 malariagen-data = ">=14.0.0, <15"
 frame = { git = "https://github.com/NovembreLab/frame.git" }
-kaleido = "==0.1.*"

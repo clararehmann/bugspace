@@ -2,9 +2,9 @@ import pandas as pd, numpy as np
 from math import ceil
 import h3
 import geopandas as gpd
-from pyproj import Geod
+from pyproj import Geod, Transformer
 from scipy.spatial import ConvexHull
-from shapely.geometry import Polygon, Point, mapping, LineString
+from shapely.geometry import Polygon, Point, LineString
 from shapely.affinity import scale
 
 def get_sampling_radius(locs):
@@ -33,8 +33,6 @@ def generate_h3_grid(lat, # latitude of the center point
     # convert hexagons to geoJSON geometries
     polygons = []
     cells = []
-    frame_polygons = []
-    frame_cells = []
     for cell in hexagons:
         # polygon of cell
         boundary = h3.cell_to_boundary(cell)
@@ -43,25 +41,64 @@ def generate_h3_grid(lat, # latitude of the center point
         polygon = Polygon(boundary)
         polygons.append(polygon)
         cells.append(cell)
-        for i in range(1, len(boundary) - 1):
-            frame_polygons.append(Polygon([boundary[0], boundary[i], boundary[i + 1]]))
-            frame_cells.append(cell)
 
     # create a GeoDataFrame
     gdf = gpd.GeoDataFrame({'h3_index': cells, 'geometry': polygons})
     gdf.set_crs(epsg=4326, inplace=True)  # set the coordinate reference system to WGS84
     # save to shapefile
     if outpath:
+        local_crs = (
+            f'+proj=aeqd +lat_0={lat} +lon_0={lon} '
+            '+datum=WGS84 +units=m +no_defs'
+        )
+        transformer = Transformer.from_crs('EPSG:4326', local_crs, always_xy=True)
+        cell_set = set(cells)
+        center_coords = {}
+        projected_centers = {}
+        for cell in cells:
+            cell_lat, cell_lon = h3.cell_to_latlng(cell)
+            center_coords[cell] = (cell_lon, cell_lat)
+            projected_centers[cell] = np.asarray(
+                transformer.transform(cell_lon, cell_lat)
+            )
+
+        frame_polygons = []
+        frame_cells = []
+        seen_triangles = set()
+        for cell in cells:
+            neighbors = [
+                neighbor
+                for neighbor in h3.grid_disk(cell, 1)
+                if neighbor != cell and neighbor in cell_set
+            ]
+            neighbors.sort(
+                key=lambda neighbor: np.arctan2(
+                    projected_centers[neighbor][1] - projected_centers[cell][1],
+                    projected_centers[neighbor][0] - projected_centers[cell][0],
+                )
+            )
+            if len(neighbors) < 3:
+                continue
+
+            for i, first in enumerate(neighbors):
+                second = neighbors[(i + 1) % len(neighbors)]
+                if not h3.are_neighbor_cells(first, second):
+                    continue
+                triangle_key = tuple(sorted((cell, first, second)))
+                if triangle_key in seen_triangles:
+                    continue
+                seen_triangles.add(triangle_key)
+                frame_polygons.append(
+                    Polygon([center_coords[cell], center_coords[first], center_coords[second]])
+                )
+                frame_cells.append(cell)
+
         frame_gdf = gpd.GeoDataFrame(
             {'h3_index': frame_cells, 'geometry': frame_polygons},
             crs='EPSG:4326',
         )
         frame_gdf.to_file(f'{outpath}_grid_resolution_{resolution}.shp', driver='ESRI Shapefile')
-        # save to lat, lon csv
-        coords = [mapping(gdf.geometry[i])['coordinates'][0][:-1] for i in range(len(gdf))]
-        coords = [coord for sublist in coords for coord in sublist]
-        coords = [tuple(list(coord)) for coord in coords] # flip to lat, lon
-        coords = np.array(list(set(coords)))
+        coords = np.asarray([center_coords[cell] for cell in cells])
         np.savetxt(f'{outpath}_grid_resolution_{resolution}_coordinates.csv', coords, delimiter=',', comments='', fmt='%1.6f')
     return gdf
 
