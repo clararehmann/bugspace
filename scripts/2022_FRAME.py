@@ -22,7 +22,7 @@ def get_query(sample_sets):
 sample_sets = [f'3.{i}' for i in range(17)]
 sample_metadata, sample_query = get_query(sample_sets)
 genotypes = ag3.snp_calls(
-                        region='3L',
+                        region='3L:1000000-2000000',
                         sample_query=sample_query,
                         site_mask='gamb_colu',
                         sample_query_options={'engine':'python'}

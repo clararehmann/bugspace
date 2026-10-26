@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#SBATCH --time=10:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if the code is single-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=500G   # the fitted graph pickle is approximately 21 GiB
+#SBATCH -J "migrationplot"   # job name
+#SBATCH -o "logs/plotframe-%J.out"   # job output file
+#SBATCH -e "logs/plotframe-%J.err"   # job error file
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+pixi run python scripts/plot_migration_rates.py

@@ -9,6 +9,14 @@ from frame.utils import prepare_graph_inputs
 from ag3_popgen import get_zarr_genotypes
 from matplotlib import pyplot as plt
 
+
+class OccupiedSpatialDiGraph(SpatialDiGraph):
+    def fit(self, *args, **kwargs):
+        kwargs['lb'] = max(kwargs.get('lb', -10.0), -10.0)
+        kwargs['ub'] = min(kwargs.get('ub', 10.0), 10.0)
+        return super().fit(*args, **kwargs)
+
+
 def genotype_array_to_FRAME(gt):
     ac = gt.to_allele_counts()
     # restrict to only biallelic sites

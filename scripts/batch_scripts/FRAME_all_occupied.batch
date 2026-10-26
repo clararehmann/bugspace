@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#SBATCH --time=10:00:00   # walltime
+#SBATCH --ntasks=1   # number of tasks
+#SBATCH --cpus-per-task=1   # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1   # number of nodes
+#SBATCH --mem=500G   # memory per node
+#SBATCH -J "allframe"   # job name
+#SBATCH --mail-user=rehmann@ebi.ac.uk   # email address
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+for resolution in 3; do
+    pixi run python scripts/FRAME_occupied_all.py --resolution $resolution
+done

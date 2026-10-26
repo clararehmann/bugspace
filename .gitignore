@@ -1,8 +1,8 @@
-data/
-logs/
+data/*
+logs/*
 # pixi environments
 .pixi/*
 !.pixi/config.toml
 scripts/unused/
 scripts/__pycache__/
-out/
+out/*
