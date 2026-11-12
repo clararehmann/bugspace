@@ -10,11 +10,15 @@ from ag3_popgen import get_zarr_genotypes
 from matplotlib import pyplot as plt
 
 
-class OccupiedSpatialDiGraph(SpatialDiGraph):
+class BoundedSpatialDiGraph(SpatialDiGraph):
     def fit(self, *args, **kwargs):
         kwargs['lb'] = max(kwargs.get('lb', -10.0), -10.0)
         kwargs['ub'] = min(kwargs.get('ub', 10.0), 10.0)
         return super().fit(*args, **kwargs)
+
+
+class OccupiedSpatialDiGraph(BoundedSpatialDiGraph):
+    pass
 
 
 def genotype_array_to_FRAME(gt):
@@ -29,7 +33,7 @@ def genotype_array_to_FRAME(gt):
     gt = gt.T
     return gt
 
-def initialize_digraph(gt, coordinates, edges, grid):
+def initialize_digraph(gt, coordinates, edges, grid, digraph_class=SpatialDiGraph):
     """
     inputs
     coordinates: string of path to coordinates file (in same order as samples) or numpy array of coordinates (in same order as samples)
@@ -48,10 +52,10 @@ def initialize_digraph(gt, coordinates, edges, grid):
 
 
     # construct spatial digraph
-    sp_digraph = SpatialDiGraph(gt, 
-                                coordinates,
-                                grid,
-                                edges)
+    sp_digraph = digraph_class(gt,
+                               coordinates,
+                               grid,
+                               edges)
     return sp_digraph
 
 def lambda_cv(sp_digraph, outpath, N, lamb_m_warmup=1e3):
