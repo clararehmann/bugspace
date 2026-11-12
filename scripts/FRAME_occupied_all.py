@@ -26,11 +26,11 @@ import argparse
 
 SAMPLE_SETS = [f'3.{i}' for i in range(17)]
 REGION = '3L:1000000-2000000'
-MAX_EDGE_DISTANCE_METERS = 100_000
+MAX_EDGE_DISTANCE_METERS = 500_000
 
 
 def connect_occupied_nodes(node_coordinates, lat_center, lon_center):
-    """Build a Delaunay graph over occupied nodes, omitting edges over 100 km."""
+    """Build a connected graph, limiting non-backbone links to 500 km."""
     node_count = len(node_coordinates)
     if node_count < 2:
         raise ValueError('FRAME needs at least two sample-occupied nodes.')
@@ -59,20 +59,21 @@ def connect_occupied_nodes(node_coordinates, lat_center, lon_center):
         except QhullError:
             pass
 
-    # Add candidate links for collinear or degenerate sites before distance filtering.
+    # Keep the minimum spanning tree as a connectivity backbone, even for long links.
     spanning_tree = minimum_spanning_tree(cdist(projected_coordinates, projected_coordinates))
     spanning_tree = spanning_tree.tocoo()
-    edges.update(
+    spanning_tree_edges = {
         tuple(sorted((int(first), int(second))))
         for first, second in zip(spanning_tree.row, spanning_tree.col)
-    )
+    }
+    edges.update(spanning_tree_edges)
 
-    nearby_edges = [
+    nearby_edges = {
         edge for edge in sorted(edges)
         if np.linalg.norm(projected_coordinates[edge[0]] - projected_coordinates[edge[1]])
         <= MAX_EDGE_DISTANCE_METERS
-    ]
-    return np.asarray(nearby_edges, dtype=int).reshape(-1, 2)
+    }
+    return np.asarray(sorted(nearby_edges | spanning_tree_edges), dtype=int).reshape(-1, 2)
 
 
 def main():

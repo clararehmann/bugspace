@@ -13,4 +13,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-pixi run python scripts/plot_migration_difference.py
+pixi run python scripts/plot_migration_difference.py --graph out/all_resolution_2_spdigraph.pkl --nodes out/all_resolution_2_nodes.csv --out out/all_resolution_2_migration_difference
